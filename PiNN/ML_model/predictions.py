@@ -170,7 +170,6 @@ class Inference:
     def infer(self, model_path: str, N: int, n: int):
         abs_path = os.path.join(model_path)
         # print(os.getcwd())
-        print(f"Absolute path: {abs_path}")
         test_model = PINN().to(self.device)
         test_model.load_state_dict(torch.load(abs_path, weights_only=False, map_location="cpu"))
 
