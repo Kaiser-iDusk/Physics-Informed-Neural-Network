@@ -21,7 +21,7 @@ def process(request):
 
         if catch:
             context["done"] = True
-            context["image_path"] = f"staticfiles/Images/Out_{n}.png"
+            context["image_path"] = f"Images/Out_{n}.png"
 
             return render(request, "index.html", context)
 
