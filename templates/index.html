@@ -1,0 +1,97 @@
+{% extends 'base.html' %}
+
+{% block title %} PiNN {% endblock title %}
+
+{% block page_name %} Home {% endblock page_name %}
+
+{% block body %}
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card shadow-lg" style="background: #1c2526; border: none; border-radius: 20px; overflow: hidden;">
+                <div class="card-header text-white text-center py-4" 
+                     style="background: linear-gradient(90deg, #2d3e50 0%, #4a6276 100%); border-bottom: none;">
+                    <h4 class="mb-0" style="font-family: 'SF Pro Display', sans-serif; font-weight: 600;">
+                        Physics Informed Neural Network 
+                    </h4>
+                </div>
+                <div class="card-body p-4" 
+                     style="background: linear-gradient(135deg, #1c2526 0%, #2d3e50 100%);">
+                    <form action="/process" method="post">
+                        {% csrf_token %}
+                        <div class="form-group mb-4">
+                            <label for="N" 
+                                   class="form-label fw-bold" 
+                                   style="color: #a3bffa;">
+                                Number of Grid Points (N) <span style="color: #8899a6; font-size: 0.9em;">(>50 recommended)</span>
+                            </label>
+                            <input type="number" 
+                                   class="form-control form-control-lg shadow-sm" 
+                                   id="N"
+                                   name="N" 
+                                   placeholder="100" 
+                                   required 
+                                   style="background: #2e3b4e; border: 1px solid #4a6276; color: #e0e0e0; border-radius: 10px;">
+                        </div>
+
+                        <div class="form-group mb-4">
+                            <label for="n" 
+                                   class="form-label fw-bold" 
+                                   style="color: #a3bffa;">
+                                Energy State (n) <span style="color: #8899a6; font-size: 0.9em;">(Positive Integer)</span>
+                            </label>
+                            <input type="number" 
+                                   class="form-control form-control-lg shadow-sm" 
+                                   id="n"
+                                   name="n" 
+                                   placeholder="2" 
+                                   required 
+                                   style="background: #2e3b4e; border: 1px solid #4a6276; color: #e0e0e0; border-radius: 10px;">
+                        </div>
+
+                        <div class="d-flex justify-content-between">
+                            <button class="btn shadow-sm" 
+                                    type="submit" 
+                                    style="background: linear-gradient(90deg, #5e81ac 0%, #81a1c1 100%); color: white; border-radius: 12px; padding: 12px 30px; font-weight: 500;">
+                                <i class="fas fa-calculator me-2"></i>Predict
+                            </button>
+                            <button class="btn shadow-sm" 
+                                    type="reset" 
+                                    style="background: linear-gradient(90deg, #bf616a 0%, #d08770 100%); color: white; border-radius: 12px; padding: 12px 30px; font-weight: 500;">
+                                <i class="fas fa-eraser me-2"></i>Clear All
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {% if done == True %}
+        <div class="row mt-4">
+            <div class="col-12">
+                <div class="card shadow-sm" 
+                    style="background: #1c2526; border-radius: 20px; border: none;">
+                    <div class="card-body text-center py-4">
+                        <h5 style="color: #8899a6; font-family: 'SF Pro Display', sans-serif;">Output</h5>
+                        <div class="card-body text-center">
+                            {% load static %}
+                            <img src="{% static image_path %}" alt=""> 
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    {% endif %}
+</div>
+
+
+{% endblock body %}
+
+{% block add_on_script %}
+    <!-- Optional: Include Font Awesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+
+    <!-- Optional: SF Pro Display font (Apple's font) -->
+    <link rel="stylesheet" href="https://fonts.cdnfonts.com/css/sf-pro-display">
+{% endblock %}
