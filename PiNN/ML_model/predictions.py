@@ -163,7 +163,7 @@ class Inference:
                 plt.title(f'n = {n} (E ≈ {n**2 * np.pi**2 / 2:.4f})')
                 plt.legend()
                 plt.grid()
-                plt.savefig(f"static/Images/Out_{n}.png")
+                plt.savefig(f"staticfiles/Images/Out_{n}.png")
 
         return 1
 
@@ -192,7 +192,7 @@ class Inference:
                 plt.title(f'n = {n} (E ≈ {n**2 * np.pi**2 / 2:.4f})')
                 plt.legend()
                 plt.grid()
-                plt.savefig(f"static/Images/Out_{n}.png")
+                plt.savefig(f"staticfiles/Images/Out_{n}.png")
                 # plt.show()
         return 1
 
