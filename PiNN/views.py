@@ -7,6 +7,9 @@ from PiNN.ML_model.predictions import PINN, Inference
 def index(request):
     return render(request, "index.html")
 
+def about(request):
+    return render(request, "about.html")
+
 def process(request):
     context = {
                 "done": False,

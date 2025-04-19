@@ -17,9 +17,10 @@
         }
         .navbar-brand, .nav-link {
             color: #f0f0f0 !important;
+            font-weight: 600 !important;
         }
         .nav-link:hover {
-            color: #cccccc !important;
+            color:rgb(132, 211, 103) !important;
         }
         .card {
             background-color: #2d2d2d;
@@ -48,6 +49,10 @@
             min-height: 400px;
         }
     </style>
+
+    {% block add_on_style %}
+
+    {% endblock add_on_style %}
 </head>
 <body>
     <!-- Navbar -->
@@ -69,7 +74,7 @@
                         <a class="nav-link" href="#">Other Projects</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="#">About</a>
+                        <a class="nav-link" href="{% url 'about' %}">About</a>
                     </li>
                 </ul>
             </div>
