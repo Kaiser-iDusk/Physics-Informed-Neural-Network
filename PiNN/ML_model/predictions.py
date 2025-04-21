@@ -8,11 +8,13 @@ import os
 class PINN(nn.Module):
     def __init__(self):
         super(PINN, self).__init__()
-        
+        # Network takes both x and n as inputs
         self.net = nn.Sequential(
             nn.Linear(2, 64),
             nn.Tanh(),
             nn.Linear(64, 128),
+            nn.Tanh(),
+            nn.Linear(128, 128),
             nn.Tanh(),
             nn.Linear(128, 128),
             nn.Tanh(),
@@ -31,8 +33,8 @@ class PINN(nn.Module):
                 nn.init.zeros_(module.bias)
 
     def forward(self, x, n, maxN):
-        # Scale n to a reasonable range (e.g., 0 to 5 maps to 0 to 1)
-        n_scaled = torch.clamp(n / maxN, 0.0, 1.0)  # Clamp to prevent extreme values
+      # scaling
+        n_scaled = torch.clamp(n / maxN, 0.0, 1.0)  # Clamped to prevent extreme values
         inputs = torch.cat([x, n_scaled * torch.ones_like(x)], dim=1)
         psi = self.net(inputs)
         return psi
@@ -42,7 +44,7 @@ class Inference:
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         torch.set_default_dtype(torch.float64)
 
-        self.MAX_SAMPLES_TRAINED = 6
+        self.MAX_SAMPLES_TRAINED = 10
         self.model = PINN().to(self.device)
         self.optimizer = optim.Adam(self.model.parameters(), lr=1e-3)
         self.scheduler = optim.lr_scheduler.ReduceLROnPlateau(self.optimizer, factor=0.5, patience=2000, min_lr=1e-6)
@@ -66,30 +68,30 @@ class Inference:
             norm_loss_total = 0.0
             bc_loss_total = 0.0
 
-            for n in n_values:
+            for n in n_values: # running for each and every different n values within [1, sample_size (say 10)]
                 n_tensor = n.unsqueeze(0)
 
                 psi = self.model(x, n_tensor, sample)
 
-                # Boundary conditions
+                # boundary conditions
                 psi_0 = self.model(torch.tensor([[0.0]], device=self.device), n_tensor, sample)
                 psi_L = self.model(torch.tensor([[L]], device=self.device), n_tensor, sample)
 
-                # Compute derivatives
+                # compute derivatives
                 dpsi_dx = torch.autograd.grad(psi, x, torch.ones_like(psi), create_graph=True)[0]
                 d2psi_dx2 = torch.autograd.grad(dpsi_dx, x, torch.ones_like(dpsi_dx), create_graph=True)[0]
 
-                # PDE loss (implicit energy based on n^2 π^2 / 2)
+                # PDE loss
                 pde_loss = torch.mean((-(h_bar**2 / (2 * m)) * d2psi_dx2 - (n**2 * torch.pi**2 * h_bar**2 / (2*m)) * psi)**2)
 
                 # Boundary loss
                 bc_loss = torch.mean(psi_0**2 + psi_L**2)
 
                 # Normalization loss
-                norm = torch.trapz(psi**2, x, dim=0)  # Add epsilon for stability
+                norm = torch.trapz(psi**2, x, dim=0) # integral of psi^2 from 0 to 1  = 1
                 norm_loss = (norm - 1)**2
 
-                # Custom total loss (using your weighting)
+                # Custom total loss : using hyperbolic weighting to control individual losses proportionally
                 norm_loss_weight = 1e2 * pde_loss.item() + 1e-4
 
                 bc_loss_weight = 1.0
@@ -103,7 +105,7 @@ class Inference:
                 norm_loss_total += norm_loss
                 bc_loss_total += bc_loss
 
-            # total_loss = pde_loss_total + bc_loss_total + (1e3 * pde_loss_total.item() + 1e-4) * norm_loss_total
+            # taking mean
 
             total_loss /= sample
             pde_loss_total /= sample
@@ -113,11 +115,15 @@ class Inference:
             if torch.isnan(total_loss):
                 print(f"NaN detected at epoch {epoch}")
                 break
+            
+            # usual back prop.
 
             total_loss.backward()
             torch.nn.utils.clip_grad_norm_(self.model.parameters(), max_norm=0.5)
             self.optimizer.step()
             self.scheduler.step(total_loss)
+
+            # logging and plotting
 
             loss_history.append(total_loss.item())
             pde_loss_history.append(pde_loss_total.item())

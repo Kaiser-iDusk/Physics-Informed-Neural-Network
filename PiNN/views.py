@@ -20,7 +20,7 @@ def process(request):
         n = request.POST.get('n')
         
         inference = Inference()
-        catch = inference.infer("PiNN/ML_model/PINN.pkl", N, n)
+        catch = inference.infer("PiNN/ML_model/PINN_modified.pkl", N, n)
 
         if catch:
             context["done"] = True
