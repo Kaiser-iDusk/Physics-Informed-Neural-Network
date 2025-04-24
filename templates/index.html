@@ -16,33 +16,66 @@
                     </h4>
                 </div>
                 <div class="card-body p-4" 
-                     style="background: linear-gradient(135deg, #1c2526 0%, #2d3e50 100%);">
+                    style="background: linear-gradient(135deg, #1c2526 0%, #2d3e50 100%);">
                     <form action="/process" method="post">
                         {% csrf_token %}
                         <div class="form-group mb-4">
-                            <label for="N" 
+                            <label for="estimation_type" 
                                    class="form-label fw-bold" 
                                    style="color: #a3bffa;">
-                                Number of Grid Points (N) <span style="color: #8899a6; font-size: 0.9em;">(>50 recommended)</span>
+                                Estimation Type
+                            </label>
+                            <select class="form-select form-select-lg shadow-sm" 
+                                    id="estimation_type" 
+                                    name="estimation_type" 
+                                    required 
+                                    style="background: #2e3b4e; border: 1px solid #4a6276; color: #e0e0e0; border-radius: 10px;">
+                                <option value="" disabled selected>Select estimation type</option>
+                                <option value="point_estimate">Point Estimate</option>
+                                <option value="range_estimate">Range Estimation with N Points</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group mb-4" id="n_field">
+                            <label for="param_N" 
+                                   class="form-label fw-bold" 
+                                   style="color: #a3bffa;">
+                                Number of Grid Points (N) (> 50 recommended)
                             </label>
                             <input type="number" 
                                    class="form-control form-control-lg shadow-sm" 
-                                   id="N"
+                                   id="N" 
                                    name="N" 
                                    placeholder="100" 
                                    required 
                                    style="background: #2e3b4e; border: 1px solid #4a6276; color: #e0e0e0; border-radius: 10px;">
                         </div>
 
-                        <div class="form-group mb-4">
-                            <label for="n" 
+                        <div class="form-group mb-4" id="x_field" style="display: none;">
+                            <label for="param_x" 
                                    class="form-label fw-bold" 
                                    style="color: #a3bffa;">
-                                Energy State (n) <span style="color: #8899a6; font-size: 0.9em;">(Positive Integer in range 1 to 10)</span>
+                                Position (x) (Position within 0-1)
                             </label>
                             <input type="number" 
                                    class="form-control form-control-lg shadow-sm" 
-                                   id="n"
+                                   id="x" 
+                                   name="x" 
+                                   placeholder="0.5" 
+                                   step="any" 
+                                   required 
+                                   style="background: #2e3b4e; border: 1px solid #4a6276; color: #e0e0e0; border-radius: 10px;">
+                        </div>
+
+                        <div class="form-group mb-4">
+                            <label for="param_n" 
+                                   class="form-label fw-bold" 
+                                   style="color: #a3bffa;">
+                                Energy State (n) <span style="color: #8899a6; font-size: 0.9em;">(Positive Integer within 1 to 10)</span>
+                            </label>
+                            <input type="number" 
+                                   class="form-control form-control-lg shadow-sm" 
+                                   id="n" 
                                    name="n" 
                                    placeholder="2" 
                                    required 
@@ -93,4 +126,33 @@
 
     <!-- Optional: SF Pro Display font (Apple's font) -->
     <link rel="stylesheet" href="https://fonts.cdnfonts.com/css/sf-pro-display">
+
+    <script>
+        // Toggle N and x fields based on estimation type
+        document.addEventListener('DOMContentLoaded', () => {
+            const estimationType = document.getElementById('estimation_type');
+            const nField = document.getElementById('n_field');
+            const xField = document.getElementById('x_field');
+
+            function toggleFields() {
+                if (estimationType.value === 'point_estimate') {
+                    nField.style.display = 'none';
+                    nField.querySelector('input').removeAttribute('required');
+                    xField.style.display = 'block';
+                    xField.querySelector('input').setAttribute('required', '');
+                } else {
+                    nField.style.display = 'block';
+                    nField.querySelector('input').setAttribute('required', '');
+                    xField.style.display = 'none';
+                    xField.querySelector('input').removeAttribute('required');
+                }
+            }
+
+            // Initial toggle
+            toggleFields();
+
+            // Toggle on change
+            estimationType.addEventListener('change', toggleFields);
+        });
+    </script>
 {% endblock add_on_script%}

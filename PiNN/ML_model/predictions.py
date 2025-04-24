@@ -147,12 +147,16 @@ class Inference:
     def analytic_sol(self, x, n):
         return np.sqrt(2/1) * np.sin(n * np.pi * x / 1)
 
-    def infer(self, N, n):
+    def infer(self, type: int, x, N: int, n: int):
         trained_output = self.train_pinn(sample=n+1)
         test_model = trained_output[0]
 
         with torch.no_grad():
-            x_test = torch.linspace(0.0, 1.0, int(N)).view(-1, 1).to(self.device)
+            if type == 2:
+                x_test = torch.linspace(0.0, 1.0, int(N)).view(-1, 1).to(self.device)
+            else:
+                x_test = torch.tensor([x], device=self.device).float().view(-1, 1)
+            # x_test = torch.linspace(0.0, 1.0, int(N)).view(-1, 1).to(self.device)
             # n_test = np.random.randint(1, sample+1, (sample,))
             n_test = [int(n)]
             for n in n_test:
@@ -164,23 +168,50 @@ class Inference:
                     psi_pred = -psi_pred
                 
                 plt.figure(figsize=(10, 5))
-                plt.plot(x_test.cpu(), psi_pred, label='PINN Prediction')
-                plt.plot(x_test.cpu(), psi_true, '--', label='Analytic Solution')
-                plt.title(f'n = {n} (E ≈ {n**2 * np.pi**2 / 2:.4f})')
-                plt.legend()
-                plt.grid()
-                plt.savefig(f"media/Images/Out_{n}.png")
+                
+                if type == 2:
+                    plt.plot(x_test.cpu(), psi_pred, label='PINN Prediction')
+                    plt.plot(x_test.cpu(), psi_true, '--', label='Analytic Solution')
+                    plt.title(f'n = {n} (E ≈ {n**2 * np.pi**2 / 2:.4f})')
+                    plt.legend()
+                    plt.grid()
 
+                else:
+                    x_test1 = torch.linspace(0.0, 1.0, 250).view(-1, 1).to(self.device)
+                    for n in n_test:
+                        n_tensor = torch.tensor([n], device=self.device).float()
+                        psi_pred1 = test_model(x_test1, n_tensor, self.MAX_SAMPLES_TRAINED).cpu().numpy()
+
+                        psi_true1 = self.analytic_sol(x_test1.cpu().numpy(), n)
+                        if np.dot(psi_pred1.flatten(), psi_true1.flatten()) < 0:
+                            psi_pred1 = -psi_pred1
+
+                    plt.plot([x, x], [0, psi_pred.flatten()[0]], 'r')
+                    plt.plot([0, x], [psi_pred.flatten()[0], psi_pred.flatten()[0]], 'r')
+                    plt.plot(x_test1.cpu(), psi_pred1, label='PINN Prediction')
+                    plt.plot(x_test1.cpu(), psi_true1, '--', label='Analytic Solution')
+                    plt.title(f'n = {n} (E ≈ {n**2 * np.pi**2 / 2:.4f}) @x = {x} : Soln = {psi_pred.flatten()[0]} and Soln_true = {psi_true.flatten()[0]}')
+                    plt.legend()
+                    plt.grid()
+
+                plt.savefig(f"media/Images/Out_{n}_{str(type)}.png")
+
+        if type == 1:
+            return psi_pred.flatten()[0]
         return 1
 
-    def infer(self, model_path: str, N: int, n: int):
+    def infer(self, model_path: str, type: int, x, N: int, n: int):
         abs_path = os.path.join(model_path)
         # print(os.getcwd())
         test_model = PINN().to(self.device)
         test_model.load_state_dict(torch.load(abs_path, weights_only=False, map_location="cpu"))
 
         with torch.no_grad():
-            x_test = torch.linspace(0.0, 1.0, int(N)).view(-1, 1).to(self.device)
+            if type == 2:
+                x_test = torch.linspace(0.0, 1.0, int(N)).view(-1, 1).to(self.device)
+            else:
+                x = float(x)
+                x_test = torch.tensor([x], device=self.device, dtype=torch.float64).view(-1, 1)
             # n_test = np.random.randint(1, sample+1, (sample,))
             n_test = [int(n)]
             for n in n_test:
@@ -192,13 +223,36 @@ class Inference:
                     psi_pred = -psi_pred
                 
                 plt.figure(figsize=(10, 5))
-                plt.plot(x_test.cpu(), psi_pred, label='PINN Prediction')
-                plt.plot(x_test.cpu(), psi_true, '--', label='Analytic Solution')
-                plt.title(f'n = {n} (E ≈ {n**2 * np.pi**2 / 2:.4f})')
-                plt.legend()
-                plt.grid()
-                plt.savefig(f"media/Images/Out_{n}.png")
-                # plt.show()
+
+                if type == 2:
+                    plt.plot(x_test.cpu(), psi_pred, label='PINN Prediction')
+                    plt.plot(x_test.cpu(), psi_true, '--', label='Analytic Solution')
+                    plt.title(f'n = {n} (E ≈ {n**2 * np.pi**2 / 2:.4f})')
+                    plt.legend()
+                    plt.grid()
+
+                else:
+                    x_test1 = torch.linspace(0.0, 1.0, 250).view(-1, 1).to(self.device)
+                    for n in n_test:
+                        n_tensor = torch.tensor([n], device=self.device).float()
+                        psi_pred1 = test_model(x_test1, n_tensor, self.MAX_SAMPLES_TRAINED).cpu().numpy()
+
+                        psi_true1 = self.analytic_sol(x_test1.cpu().numpy(), n)
+                        if np.dot(psi_pred1.flatten(), psi_true1.flatten()) < 0:
+                            psi_pred1 = -psi_pred1
+
+                    plt.plot([x, x], [0, psi_pred.flatten()[0]], 'r')
+                    plt.plot([0, x], [psi_pred.flatten()[0], psi_pred.flatten()[0]], 'r')
+                    plt.plot(x_test1.cpu(), psi_pred1, label='PINN Prediction')
+                    plt.plot(x_test1.cpu(), psi_true1, '--', label='Analytic Solution')
+                    plt.title(f'n = {n} (E ≈ {n**2 * np.pi**2 / 2:.4f}) @x = {x} : Soln = {psi_pred.flatten()[0]} and Soln_true = {psi_true.flatten()[0]}')
+                    plt.legend()
+                    plt.grid()
+
+                plt.savefig(f"media/Images/Out_{n}_{str(type)}.png")
+        
+        if type == 1:
+            return psi_pred.flatten()[0]
         return 1
 
         
